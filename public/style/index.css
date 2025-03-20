@@ -1,0 +1,42 @@
+body {
+    margin: 0;
+    display: flex;
+    height: 100svh;
+    place-items: center;
+    background: repeating-conic-gradient(
+      from 45deg,
+      #253a5e 0% 25%,
+      #3c5e8b 0% 50%
+    );
+    background-size: max(10vw, 10svh) max(10vw, 10svh);
+    background-color: #3c5e8b;
+
+    font-family: 'Roboto', sans-serif;
+    
+    align-self: center;
+    justify-content: center;
+    flex-direction: row;
+
+    gap: 1rem;
+}
+
+.container {
+    div {
+        background: #fff;
+    }
+    display: flex;
+    flex-direction: row;
+}
+
+.tetris {
+    width: 200px;
+    height: 400px;
+}
+
+.first {
+    width: 150px;
+}
+
+.last {
+    width: 150px;
+}
