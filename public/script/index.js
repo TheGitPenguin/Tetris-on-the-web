@@ -8,6 +8,19 @@ boardContext.fillRect(0, 0, board.width, board.height);
 const img = new Image();
 img.src = '../img/PieceTetris.png';
 
+let downInterval = setInterval(() => {
+    clearBoard();
+    moveDown();
+    drawBoard();
+    drawCurrentPiece();
+}, 1000);
+
+let rightInterval;
+
+let leftInterval;
+
+let keyPress = [];
+
 const templatePiece = [
     [ // ok
         [3, 0],
@@ -49,7 +62,7 @@ const templatePiece = [
         [4, 0],
         [4, 1],
         [5, 0],
-        [4, 1]
+        [4, 0]
     ],
     [ // ok
         [4, 0],
@@ -132,7 +145,6 @@ function currentPieceToBoard() {
             let piece = currentPiece[i];
             boardData[piece[0]][piece[1]] = color; // Copie du tableau color
         }
-        console.log("Hey");
     }
 }
 
@@ -149,8 +161,21 @@ function spawnPiece() {
 
 
 function ifMoveTo(x, y) {
-    for (let i = 0; i < currentPiece.length - 1; i++) {
-        if (currentPiece[i][0] + x < 0 || currentPiece[i][0] + x >= 10 || currentPiece[i][1] + y >= 20 || ifPiece(currentPiece[i][0] + x, currentPiece[i][1] + y)) {
+    return canMoveTo(x, y, currentPiece);
+}
+
+function canMoveTo(x, y, piece) {
+    for (let i = 0; i < piece.length - 1; i++) {
+        if (piece[i][0] + x < 0 || piece[i][0] + x >= 10 || piece[i][1] + y >= 20 || ifPiece(piece[i][0] + x, piece[i][1] + y)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+function ifRotate(piece) {
+    for (let i = 0; i < piece.length - 1; i++) {
+        if (piece[i][0] < 0 || piece[i][0] >= 10 || piece[i][1] >= 20 || ifPiece(piece[i][0], piece[i][1])) {
             return false;
         }
     }
@@ -158,6 +183,14 @@ function ifMoveTo(x, y) {
 }
 
 function ifPiece(x, y) {
+    if (x < 0 || x >= 10 || y >= 20) {
+        return true;
+    }
+
+    if (y < 0) {
+        return false;
+    }
+
     if (boardData[x][y][0] == 0 && boardData[x][y][1] == 0 && boardData[x][y][2] == 0) {
         return false;
     }
@@ -170,13 +203,35 @@ function rotate() {
         return;
     }
 
-    const center = currentPiece[currentPiece.length - 1];
-    for (let i = 0; i < currentPiece.length - 1; i++) {
-        const x = currentPiece[i][0] - center[0];
-        const y = currentPiece[i][1] - center[1];
+    let currentPieceCopy = [];
 
-        currentPiece[i][0] = center[0] - y;
-        currentPiece[i][1] = center[1] + x;
+    for (let i = 0; i < currentPiece.length; i++) {
+        currentPieceCopy.push([currentPiece[i][0], currentPiece[i][1]]);
+    }
+
+    const center = currentPieceCopy[currentPieceCopy.length - 1];
+    for (let i = 0; i < currentPiece.length - 1; i++) {
+        const x = currentPieceCopy[i][0] - center[0];
+        const y = currentPieceCopy[i][1] - center[1];
+
+        currentPieceCopy[i][0] = center[0] - y;
+        currentPieceCopy[i][1] = center[1] + x;
+    }
+
+    
+    if (ifRotate(currentPieceCopy)) {
+        currentPiece = currentPieceCopy;
+    }
+    else {
+        for (let x = -1; x <= 1; x++) {
+            for (let y = -1; y <= 1; y++) {
+                if (canMoveTo(x, y, currentPieceCopy)) {
+                    moveToPiece(x, y, currentPieceCopy);
+                    currentPiece = currentPieceCopy;
+                    return;
+                }
+            }
+        }
     }
 }
 
@@ -201,9 +256,13 @@ function checkLine() {
 }
 
 function moveTo(x, y) {
-    for (let i = 0; i < currentPiece.length; i++) {
-        currentPiece[i][0] += x;
-        currentPiece[i][1] += y;
+    moveToPiece(x, y, currentPiece);
+}
+
+function moveToPiece(x, y, piece) {
+    for (let i = 0; i < piece.length; i++) {
+        piece[i][0] += x;
+        piece[i][1] += y;
     }
 }
 
@@ -232,30 +291,83 @@ function moveRight() {
     moveTo(1, 0);
 }
 
+function fasteDrop() {
+    while (ifMoveTo(0, 1)) {
+        moveDown();
+    }
+}
+
 img.onload = () => {
     loadTetris();
     drawCurrentPiece();
 
-    setInterval(() => {
-        clearBoard();
-        moveDown();
-        drawBoard();
-        drawCurrentPiece();
-    }, 1000);
+    
 
     document.addEventListener('keydown', (event) => {
-        if (event.key == 'ArrowUp') {
+        if (event.key == 'ArrowUp' && !keyPress.includes('ArrowUp')) {
             rotate();
-        } else if (event.key == 'ArrowDown') {
-            moveDown();
-        } else if (event.key == 'ArrowLeft') {
+        } else if (event.key == 'ArrowDown' && !keyPress.includes('ArrowDown')) {
+            clearInterval(downInterval);
+            downInterval = setInterval(() => {
+                clearBoard();
+                moveDown();
+                drawBoard();
+                drawCurrentPiece();
+            }, 50);
+        } else if (event.key == 'ArrowLeft' && !keyPress.includes('ArrowLeft')) {
+            clearBoard();
             moveLeft();
-        } else if (event.key == 'ArrowRight') {
+            drawBoard();
+            drawCurrentPiece();
+
+            leftInterval = setInterval(() => {
+                clearBoard();
+                moveLeft();
+                drawBoard();
+                drawCurrentPiece();
+            }, 100);
+        } else if (event.key == 'ArrowRight' && !keyPress.includes('ArrowRight')) {
+            clearBoard();
             moveRight();
+            drawBoard();
+            drawCurrentPiece();
+
+            rightInterval = setInterval(() => {
+                clearBoard();
+                moveRight();
+                drawBoard();
+                drawCurrentPiece();
+            }, 100);
+        } else if (event.key == ' ' && !keyPress.includes(' ')) {
+            fasteDrop();
         }
 
         clearBoard();
         drawBoard();
         drawCurrentPiece();
+
+        console.log(event.key);
+
+        keyPress.push(event.key);
+    });
+
+    document.addEventListener('keyup', (event) => {
+        if (event.key == 'ArrowDown') {
+            clearInterval(downInterval);
+            downInterval = setInterval(() => {
+                clearBoard();
+                moveDown();
+                drawBoard();
+                drawCurrentPiece();
+            }, 1000);
+        } else if (event.key == 'ArrowLeft') {
+            clearInterval(leftInterval);
+        } else if (event.key == 'ArrowRight') {
+            clearInterval(rightInterval);
+        }
+
+        keyPress = keyPress.filter((key) => {
+            return key != event.key;
+        });
     });
 }
