@@ -1,4 +1,5 @@
 const board = document.getElementById('tetris-canvas');
+const scoreElement = document.getElementById('score-value');
 
 const boardContext = board.getContext('2d');
 
@@ -19,6 +20,11 @@ let rightInterval;
 let leftInterval;
 
 let keyPress = [];
+
+let score = 0;
+let level = 1;
+let lines = 0;
+let speed = 1000;
 
 const templatePiece = [
     [ // ok
@@ -279,8 +285,11 @@ function rotate() {
 }
 
 function checkLine() {
+    let lineFilled = 0;
+
     for (let i = 0; i < 20; i++) {
         let check = true;
+
         for (let j = 0; j < 10; j++) {
             if (boardData[j][i][0] == 0 && boardData[j][i][1] == 0 && boardData[j][i][2] == 0) {
                 check = false;
@@ -294,8 +303,25 @@ function checkLine() {
                     boardData[k][j] = boardData[k][j - 1];
                 }
             }
+
+            lineFilled++;
         }
     }
+
+    if (lineFilled == 1) {
+        score += 40;
+    }
+    else if (lineFilled == 2) {
+        score += 100;
+    }
+    else if (lineFilled == 3) {
+        score += 300;
+    }
+    else if (lineFilled == 4) {
+        score += 1200;
+    }
+
+    scoreElement.innerText = score;
 }
 
 function moveTo(x, y) {
@@ -355,9 +381,7 @@ function fasteDrop() {
 
 img.onload = () => {
     loadTetris();
-    drawCurrentPiece();
-
-    
+    refresh();
 
     document.addEventListener('keydown', (event) => {
         if (event.key == 'ArrowUp' && !keyPress.includes('ArrowUp')) {
