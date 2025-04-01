@@ -9,10 +9,9 @@ const img = new Image();
 img.src = '../img/PieceTetris.png';
 
 let downInterval = setInterval(() => {
-    clearBoard();
     moveDown();
-    drawBoard();
-    drawCurrentPiece();
+
+    refresh();
 }, 1000);
 
 let rightInterval;
@@ -30,10 +29,10 @@ const templatePiece = [
         [4.5, 0.5]
     ],
     [ 
-        [3, 0],
-        [4, 0],
-        [5, 0],
+        [3, 1],
+        [4, 1],
         [5, 1],
+        [5, 0],
         [4, 1]
     ],
     [ // ok
@@ -72,6 +71,16 @@ const templatePiece = [
         [4.5, 0.5]
     ]
 ];
+
+const MOVELEFT = 1;
+const MOVERIGHT = 2;
+const MOVEDOWN = 3;
+const ROTATE = 4;
+const MOVEDOWNFAST = 5;
+const RESPAWN = 6;
+
+const history = [];
+
 
 const templateColor = [
     [255, 0, 0, 200],
@@ -133,6 +142,34 @@ function clearBoard() {
     boardContext.fillRect(0, 0, board.width, board.height);
 }
 
+function drawGrid() {
+    boardContext.strokeStyle = 'gray'; // Couleur des lignes du quadrillage
+    boardContext.lineWidth = 0.5; // Épaisseur des lignes
+
+    // Dessiner les lignes verticales
+    for (let x = 0; x <= board.width; x += board.width / 10) {
+        boardContext.beginPath();
+        boardContext.moveTo(x, 0);
+        boardContext.lineTo(x, board.height);
+        boardContext.stroke();
+    }
+
+    // Dessiner les lignes horizontales
+    for (let y = 0; y <= board.height; y += board.height / 20) {
+        boardContext.beginPath();
+        boardContext.moveTo(0, y);
+        boardContext.lineTo(board.width, y);
+        boardContext.stroke();
+    }
+}
+
+function refresh() {
+    clearBoard();
+    drawGrid();
+    drawBoard();
+    drawCurrentPiece();
+}
+
 function loadTetris() {
     currentPieceToBoard();
     checkLine();
@@ -157,6 +194,8 @@ function spawnPiece() {
     }
 
     color = templateColor[random];
+
+    history.push([RESPAWN, random]);
 }
 
 
@@ -221,6 +260,8 @@ function rotate() {
     
     if (ifRotate(currentPieceCopy)) {
         currentPiece = currentPieceCopy;
+        history.push([ROTATE, 0]);
+        return;
     }
     else {
         for (let x = -1; x <= 1; x++) {
@@ -228,6 +269,8 @@ function rotate() {
                 if (canMoveTo(x, y, currentPieceCopy)) {
                     moveToPiece(x, y, currentPieceCopy);
                     currentPiece = currentPieceCopy;
+
+                    history.push([ROTATE, 0]);
                     return;
                 }
             }
@@ -269,32 +312,45 @@ function moveToPiece(x, y, piece) {
 function moveDown() {
     if (!ifMoveTo(0, 1) || currentPiece.length == 1) {
         loadTetris();
-        return;
+        return false;
     }
 
     moveTo(0, 1);
+
+    history.push([MOVEDOWN, 0]);
+
+    return true;
 }
 
 function moveLeft() {
     if (!ifMoveTo(-1, 0) || currentPiece.length == 1) {
-        return;
+        return false;
     }
 
     moveTo(-1, 0);
+
+    history.push([MOVELEFT, 0]);
+
+    return true;
 }
 
 function moveRight() {
     if (!ifMoveTo(1, 0) || currentPiece.length == 1) {
-        return;
+        return false;
     }
 
     moveTo(1, 0);
+    history.push([MOVERIGHT, 0]);
+
+    return true;
 }
 
 function fasteDrop() {
     while (ifMoveTo(0, 1)) {
         moveDown();
     }
+    loadTetris();
+    history.push([MOVEDOWNFAST, 0]);
 }
 
 img.onload = () => {
@@ -309,42 +365,30 @@ img.onload = () => {
         } else if (event.key == 'ArrowDown' && !keyPress.includes('ArrowDown')) {
             clearInterval(downInterval);
             downInterval = setInterval(() => {
-                clearBoard();
                 moveDown();
-                drawBoard();
-                drawCurrentPiece();
+                
+                refresh();
             }, 50);
         } else if (event.key == 'ArrowLeft' && !keyPress.includes('ArrowLeft')) {
-            clearBoard();
             moveLeft();
-            drawBoard();
-            drawCurrentPiece();
 
             leftInterval = setInterval(() => {
-                clearBoard();
                 moveLeft();
-                drawBoard();
-                drawCurrentPiece();
+
+                refresh();
             }, 100);
         } else if (event.key == 'ArrowRight' && !keyPress.includes('ArrowRight')) {
-            clearBoard();
             moveRight();
-            drawBoard();
-            drawCurrentPiece();
 
             rightInterval = setInterval(() => {
-                clearBoard();
                 moveRight();
-                drawBoard();
-                drawCurrentPiece();
+                refresh();
             }, 100);
         } else if (event.key == ' ' && !keyPress.includes(' ')) {
             fasteDrop();
         }
 
-        clearBoard();
-        drawBoard();
-        drawCurrentPiece();
+        refresh();
 
         console.log(event.key);
 
@@ -355,10 +399,9 @@ img.onload = () => {
         if (event.key == 'ArrowDown') {
             clearInterval(downInterval);
             downInterval = setInterval(() => {
-                clearBoard();
                 moveDown();
-                drawBoard();
-                drawCurrentPiece();
+
+                refresh();
             }, 1000);
         } else if (event.key == 'ArrowLeft') {
             clearInterval(leftInterval);
@@ -371,3 +414,5 @@ img.onload = () => {
         });
     });
 }
+
+
