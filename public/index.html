@@ -4,20 +4,37 @@
 <head>
     <meta charset="utf-8" />
     <title>Tetris on the web</title>
-    <link rel="stylesheet" href="./style/index.css" />
     <script src="./script/index.js" defer></script>
+    <link rel="stylesheet" href="./style/index.css" />
 </head>
 
 <body>
     <div class="container">
-        <div id="score" class="first">
+        <div id="left-part" class="first">
             <p>
                 Score: 
                 <span id="score-value">0</span>
             </p>
         </div>
         <div id="tetris" class="tetris">
-            <canvas id="tetris-canvas" width="300" height="600"></canvas>
+            <canvas class="hidden" id="tetris-canvas" width="300" height="600"></canvas>
+            <div class="main-menu hidden" id="main-menu" >
+                <button id="start-button">Start</button>
+            </div>
+            <div class="gameOver hidden">
+                <p>Game Over</p>
+                <button id="restart-button">Restart</button>
+                <button id="main-menu">Main Menu</button>
+            </div>
+            <div class="pause hidden">
+                <p>Paused</p>
+                <button id="resume-button">Resume</button>
+                <button id="main-menu">Main Menu</button>
+            </div>
+            <div class="load-menu" id="load-menu">
+                <span class="loader"></span>
+                <p>Loading...</p>
+            </div>
         </div>
         <div class="last"></div>
     </div>

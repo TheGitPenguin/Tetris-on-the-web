@@ -1,5 +1,14 @@
 const board = document.getElementById('tetris-canvas');
 const scoreElement = document.getElementById('score-value');
+const loadMenu = document.getElementById('load-menu');
+const mainMenu = document.getElementById('main-menu');
+
+const startButton = document.getElementById('start-button');
+
+startButton.addEventListener('click', () =>
+{
+
+});
 
 const boardContext = board.getContext('2d');
 
@@ -9,11 +18,7 @@ boardContext.fillRect(0, 0, board.width, board.height);
 const img = new Image();
 img.src = '../img/PieceTetris.png';
 
-let downInterval = setInterval(() => {
-    moveDown();
-
-    refresh();
-}, 1000);
+let downInterval;
 
 let rightInterval;
 
@@ -78,14 +83,6 @@ const templatePiece = [
     ]
 ];
 
-const MOVELEFT = 1;
-const MOVERIGHT = 2;
-const MOVEDOWN = 3;
-const ROTATE = 4;
-const MOVEDOWNFAST = 5;
-const RESPAWN = 6;
-
-const history = [];
 
 
 const templateColor = [
@@ -136,10 +133,26 @@ let color = []
 
 let boardData = [];
 
-for (let i = 0; i < 10; i++) {
-    boardData[i] = [];
-    for (let j = 0; j < 20; j++) {
-        boardData[i][j] = [0, 0, 0, 255];
+const MOVELEFT = 1;
+const MOVERIGHT = 2;
+const MOVEDOWN = 3;
+const ROTATE = 4;
+const MOVEDOWNFAST = 5;
+const RESPAWN = 6;
+
+const history = [];
+
+function startGame() {
+    boardData = [];
+    currentPiece = [];
+    color = [];
+    history = [];
+
+    for (let i = 0; i < 10; i++) {
+        boardData[i] = [];
+        for (let j = 0; j < 20; j++) {
+            boardData[i][j] = [0, 0, 0, 255];
+        }
     }
 }
 
@@ -434,65 +447,64 @@ function fasteDrop() {
     history.push([MOVEDOWNFAST, 0]);
 }
 
-img.onload = () => {
-    initAndChangeSpeedDrop();
-    loadTetris();
-    refresh();
+document.addEventListener('keydown', (event) => {
+    if (event.key == 'ArrowUp' && !keyPress.includes('ArrowUp')) {
+        rotate();
+    } else if (event.key == 'ArrowDown' && !keyPress.includes('ArrowDown')) {
+        clearInterval(downInterval);
+        downInterval = setInterval(() => {
+            moveDown();
+            
+            refresh();
+        }, 50);
+    } else if (event.key == 'ArrowLeft' && !keyPress.includes('ArrowLeft')) {
+        moveLeft();
 
-    document.addEventListener('keydown', (event) => {
-        if (event.key == 'ArrowUp' && !keyPress.includes('ArrowUp')) {
-            rotate();
-        } else if (event.key == 'ArrowDown' && !keyPress.includes('ArrowDown')) {
-            clearInterval(downInterval);
-            downInterval = setInterval(() => {
-                moveDown();
-                
-                refresh();
-            }, 50);
-        } else if (event.key == 'ArrowLeft' && !keyPress.includes('ArrowLeft')) {
+        leftInterval = setInterval(() => {
             moveLeft();
 
-            leftInterval = setInterval(() => {
-                moveLeft();
+            refresh();
+        }, 100);
+    } else if (event.key == 'ArrowRight' && !keyPress.includes('ArrowRight')) {
+        moveRight();
 
-                refresh();
-            }, 100);
-        } else if (event.key == 'ArrowRight' && !keyPress.includes('ArrowRight')) {
+        rightInterval = setInterval(() => {
             moveRight();
+            refresh();
+        }, 100);
+    } else if (event.key == ' ' && !keyPress.includes(' ')) {
+        fasteDrop();
+    }
 
-            rightInterval = setInterval(() => {
-                moveRight();
-                refresh();
-            }, 100);
-        } else if (event.key == ' ' && !keyPress.includes(' ')) {
-            fasteDrop();
-        }
+    refresh();
 
-        refresh();
+    console.log(event.key);
 
-        console.log(event.key);
+    keyPress.push(event.key);
+});
 
-        keyPress.push(event.key);
+document.addEventListener('keyup', (event) => {
+    if (event.key == 'ArrowDown') {
+        clearInterval(downInterval);
+        downInterval = setInterval(() => {
+            moveDown();
+
+            refresh();
+        }, 1000);
+    } else if (event.key == 'ArrowLeft') {
+        clearInterval(leftInterval);
+    } else if (event.key == 'ArrowRight') {
+        clearInterval(rightInterval);
+    }
+
+    keyPress = keyPress.filter((key) => {
+        return key != event.key;
     });
+});
 
-    document.addEventListener('keyup', (event) => {
-        if (event.key == 'ArrowDown') {
-            clearInterval(downInterval);
-            downInterval = setInterval(() => {
-                moveDown();
-
-                refresh();
-            }, 1000);
-        } else if (event.key == 'ArrowLeft') {
-            clearInterval(leftInterval);
-        } else if (event.key == 'ArrowRight') {
-            clearInterval(rightInterval);
-        }
-
-        keyPress = keyPress.filter((key) => {
-            return key != event.key;
-        });
-    });
+img.onload = () => {
+    loadMenu.classList.add('hidden');
+    mainMenu.classList.remove('hidden');
 }
 
 
