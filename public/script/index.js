@@ -2,12 +2,13 @@ const board = document.getElementById('tetris-canvas');
 const scoreElement = document.getElementById('score-value');
 const loadMenu = document.getElementById('load-menu');
 const mainMenu = document.getElementById('main-menu');
+const pauseMenu = document.getElementById('pause-menu');
 
 const startButton = document.getElementById('start-button');
 
 startButton.addEventListener('click', () =>
 {
-
+    startGame();
 });
 
 const boardContext = board.getContext('2d');
@@ -17,6 +18,10 @@ boardContext.fillRect(0, 0, board.width, board.height);
 
 const img = new Image();
 img.src = '../img/PieceTetris.png';
+
+let endDownInterval;
+
+let oppacity = 255;
 
 let downInterval;
 
@@ -86,13 +91,13 @@ const templatePiece = [
 
 
 const templateColor = [
-    [255, 0, 0, 200],
-    [0, 255, 0, 200],
-    [0, 0, 255, 200],
-    [255, 255, 0, 200],
-    [0, 255, 255, 200],
-    [255, 0, 255, 200],
-    [255, 40, 130, 200]
+    [255, 0, 0, 255],
+    [0, 255, 0, 255],
+    [0, 0, 255, 255],
+    [255, 255, 0, 255],
+    [0, 255, 255, 255],
+    [255, 0, 255, 255],
+    [255, 40, 130, 255]
 ];
 
 const speedSecondsToBotomPerLevel = [
@@ -140,7 +145,7 @@ const ROTATE = 4;
 const MOVEDOWNFAST = 5;
 const RESPAWN = 6;
 
-const history = [];
+let history = [];
 
 function startGame() {
     boardData = [];
@@ -154,9 +159,39 @@ function startGame() {
             boardData[i][j] = [0, 0, 0, 255];
         }
     }
+
+    score = 0;
+    lines = 0;
+    level = 0;
+    speed = 1000;
+    scoreElement.innerText = score;
+    
+    mainMenu.classList.add('hidden');
+    loadMenu.classList.add('hidden');
+    board.classList.add('hidden');
+    
+    board.classList.remove('hidden');
+
+    iniGame();
+
+    refresh();
 }
 
-function drawTetris(x, y, color) {
+function iniGame() {
+    // Initialisation de la vitesse de chute
+    speed = (speedSecondsToBotomPerLevel[level]/20) * 1000;
+
+    spawnPiece();
+
+    // Intervalle pour faire tomber la pièce
+    downInterval = setInterval(() => {
+        moveDown();
+
+        refresh();
+    }, speed);
+}
+
+function drawTetisWithOppacity(x, y, color, oppacity) {
     boardContext.drawImage(img, x, y, board.width/10, board.width/10);
 
     const imageData = boardContext.getImageData(x, y, board.width/10, board.width/10);
@@ -166,16 +201,21 @@ function drawTetris(x, y, color) {
         data[i] = data[i] * color[0] / 255;
         data[i + 1] = data[i + 1] * color[1] / 255;
         data[i + 2] = data[i + 2] * color[2] / 255;
-        data[i + 3] = data[i + 3] * color[3] / 255;
+        data[i + 3] = data[i + 3] * oppacity / 255;
     }
 
     boardContext.putImageData(imageData, x, y);
 }
 
+
+function drawTetris(x, y, color) {
+    drawTetisWithOppacity(x, y, color, 255);
+}
+
 function drawCurrentPiece() {
     for (let i = 0 ; i < currentPiece.length - 1; i++) {
         let piece = currentPiece[i];
-        drawTetris(piece[0] * board.width/10, piece[1] * board.width/10, color);
+        drawTetisWithOppacity(piece[0] * board.width/10, piece[1] * board.width/10, color, oppacity);
     }
 }
 
@@ -223,6 +263,10 @@ function refresh() {
 }
 
 function loadTetris() {
+    clearDownInterval();
+    clearInterval(endDownInterval);
+    oppacity = 255;
+
     currentPieceToBoard();
     checkLine();
     spawnPiece();
@@ -313,7 +357,6 @@ function rotate() {
     if (ifRotate(currentPieceCopy)) {
         currentPiece = currentPieceCopy;
         history.push([ROTATE, 0]);
-        return;
     }
     else {
         for (let x = -1; x <= 1; x++) {
@@ -323,11 +366,46 @@ function rotate() {
                     currentPiece = currentPieceCopy;
 
                     history.push([ROTATE, 0]);
-                    return;
+                    
+                    x = 2;
+                    y = 2;
                 }
             }
         }
     }
+
+    checkEndDrop();
+}
+
+function checkEndDrop() {
+    clearInterval(endDownInterval); 
+    oppacity = 255;
+
+    if (!ifMoveTo(0, 1)) {
+        clearDownInterval();
+
+        endDownInterval = setInterval(() => {
+            oppacity -= 5;
+
+            if (oppacity <= 60) {
+                loadTetris();
+            }
+
+            refresh();
+        }
+        , 11);
+    }
+    else if (!downInterval) {
+        clearDownInterval();
+
+        initAndChangeSpeedDrop();
+    }
+}
+
+
+function clearDownInterval() {
+    clearInterval(downInterval);
+    downInterval = null;
 }
 
 function checkLine() {
@@ -384,7 +462,7 @@ function initAndChangeSpeedDrop() {
     else {
         speed = (speedSecondsToBotomPerLevel[level]/20) * 1000;
     }
-    clearInterval(downInterval);
+    clearDownInterval();
     downInterval = setInterval(() => {
         moveDown();
 
@@ -401,11 +479,12 @@ function moveToPiece(x, y, piece) {
         piece[i][0] += x;
         piece[i][1] += y;
     }
+
+    checkEndDrop();
 }
 
 function moveDown() {
     if (!ifMoveTo(0, 1) || currentPiece.length == 1) {
-        loadTetris();
         return false;
     }
 
@@ -443,6 +522,11 @@ function fasteDrop() {
     while (ifMoveTo(0, 1)) {
         moveDown();
     }
+
+    clearDownInterval();
+    clearInterval(endDownInterval);
+    oppacity = 255;
+
     loadTetris();
     history.push([MOVEDOWNFAST, 0]);
 }
@@ -451,7 +535,7 @@ document.addEventListener('keydown', (event) => {
     if (event.key == 'ArrowUp' && !keyPress.includes('ArrowUp')) {
         rotate();
     } else if (event.key == 'ArrowDown' && !keyPress.includes('ArrowDown')) {
-        clearInterval(downInterval);
+        clearDownInterval();
         downInterval = setInterval(() => {
             moveDown();
             
@@ -485,12 +569,7 @@ document.addEventListener('keydown', (event) => {
 
 document.addEventListener('keyup', (event) => {
     if (event.key == 'ArrowDown') {
-        clearInterval(downInterval);
-        downInterval = setInterval(() => {
-            moveDown();
-
-            refresh();
-        }, 1000);
+        initAndChangeSpeedDrop();
     } else if (event.key == 'ArrowLeft') {
         clearInterval(leftInterval);
     } else if (event.key == 'ArrowRight') {
