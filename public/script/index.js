@@ -5,13 +5,22 @@ const mainMenu = document.getElementById('main-menu');
 const pauseMenu = document.getElementById('pause-menu');
 
 const startButton = document.getElementById('start-button');
+const pauseButton = document.getElementById('pause-button');
+
+const preview = document.getElementById('preview-canvas');
 
 startButton.addEventListener('click', () =>
 {
     startGame();
 });
 
+pauseButton.addEventListener('click', () =>
+{
+    pauseGame();
+});
+
 const boardContext = board.getContext('2d');
+const previewContext = preview.getContext('2d');
 
 boardContext.fillStyle = 'black';
 boardContext.fillRect(0, 0, board.width, board.height);
@@ -35,6 +44,9 @@ let score = 0;
 let level = 0;
 let lines = 0;
 let speed = 1000;
+
+let pause = false;
+let gameOver = false;
 
 const templatePiece = [
     [ // ok
@@ -134,7 +146,9 @@ const speedSecondsToBotomPerLevel = [
 ];
 
 let currentPiece = [];
-let color = []
+let nextPiece = [];
+let color = [];
+let nextColor = [];
 
 let boardData = [];
 
@@ -148,6 +162,9 @@ const RESPAWN = 6;
 let history = [];
 
 function startGame() {
+    pause = false;
+    gameOver = false;
+
     boardData = [];
     currentPiece = [];
     color = [];
@@ -175,6 +192,17 @@ function startGame() {
     iniGame();
 
     refresh();
+}
+
+function pauseGame() {
+    if (pause) {
+        pause = false;
+        initAndChangeSpeedDrop();
+    } else {
+        pause = true;
+        clearDownInterval();
+        clearInterval(endDownInterval);
+    }
 }
 
 function iniGame() {
@@ -205,6 +233,34 @@ function drawTetisWithOppacity(x, y, color, oppacity) {
     }
 
     boardContext.putImageData(imageData, x, y);
+}
+
+function drawTetrisOnThePreview(x, y, color) {
+    let width = 0;
+    let height = 0;
+
+    for (let i = 0; i < nextPiece.length - 1; i++) {
+        let piece = nextPiece[i];
+        width = Math.max(width, piece[0]);
+        height = Math.max(height, piece[1]);
+    }
+
+    x = x + (preview.width/5 - width * preview.width/5) / 2;
+    y = y + (preview.height/5 - height * preview.width/10) / 2;
+
+    previewContext.drawImage(img, x, y, preview.width/5, preview.width/5);
+
+    const imageData = previewContext.getImageData(x, y, preview.width/5, preview.width/5);
+    const data = imageData.data;
+
+    for (let i = 0; i < data.length; i += 4) {
+        data[i] = data[i] * color[0] / 255;
+        data[i + 1] = data[i + 1] * color[1] / 255;
+        data[i + 2] = data[i + 2] * color[2] / 255;
+        data[i + 3] = data[i + 3] * color[3] / 255;
+    }
+
+    previewContext.putImageData(imageData, x, y);
 }
 
 
@@ -255,11 +311,22 @@ function drawGrid() {
     }
 }
 
+function displayPreview() {
+    previewContext.fillStyle = 'black';
+    previewContext.fillRect(0, 0, preview.width, preview.height);
+
+    for (let i = 0; i < nextPiece.length - 1; i++) {
+        let piece = nextPiece[i];
+        drawTetrisOnThePreview(piece[0] * preview.width/5, piece[1] * preview.width/5, nextColor);
+    }
+}
+
 function refresh() {
     clearBoard();
     drawGrid();
     drawBoard();
     drawCurrentPiece();
+    displayPreview();
 }
 
 function loadTetris() {
@@ -284,12 +351,22 @@ function currentPieceToBoard() {
 function spawnPiece() {
     const random = Math.floor(Math.random() * templatePiece.length);
 
-    currentPiece = [];
+    if (nextPiece.length == 0) {
+        for (let i = 0; i < templatePiece[random].length; i++) {
+            nextPiece.push([templatePiece[random][i][0], templatePiece[random][i][1]]);
+        }
+        nextColor = templateColor[random];
+    }
+    currentPiece = nextPiece;
+    
+    nextPiece = [];
+
     for (let i = 0; i < templatePiece[random].length; i++) {
-        currentPiece.push([templatePiece[random][i][0], templatePiece[random][i][1]]);
+        nextPiece.push([templatePiece[random][i][0], templatePiece[random][i][1]]);
     }
 
-    color = templateColor[random];
+    color = nextColor;
+    nextColor = templateColor[random];
 
     history.push([RESPAWN, random]);
 }
@@ -360,7 +437,7 @@ function rotate() {
     }
     else {
         for (let x = -1; x <= 1; x++) {
-            for (let y = -1; y <= 1; y++) {
+            for (let y = 0; y >= -1; y--) {
                 if (canMoveTo(x, y, currentPieceCopy)) {
                     moveToPiece(x, y, currentPieceCopy);
                     currentPiece = currentPieceCopy;
@@ -368,7 +445,7 @@ function rotate() {
                     history.push([ROTATE, 0]);
                     
                     x = 2;
-                    y = 2;
+                    y = -2;
                 }
             }
         }
