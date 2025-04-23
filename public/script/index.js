@@ -183,11 +183,7 @@ function startGame() {
     speed = 1000;
     scoreElement.innerText = score;
     
-    mainMenu.classList.add('hidden');
-    loadMenu.classList.add('hidden');
-    board.classList.add('hidden');
-    
-    board.classList.remove('hidden');
+    displayGameBoard();
 
     iniGame();
 
@@ -197,9 +193,11 @@ function startGame() {
 function pauseGame() {
     if (pause) {
         pause = false;
+        displayGameBoard();
         initAndChangeSpeedDrop();
     } else {
         pause = true;
+        displayPause();
         clearDownInterval();
         clearInterval(endDownInterval);
     }
@@ -217,116 +215,6 @@ function iniGame() {
 
         refresh();
     }, speed);
-}
-
-function drawTetisWithOppacity(x, y, color, oppacity) {
-    boardContext.drawImage(img, x, y, board.width/10, board.width/10);
-
-    const imageData = boardContext.getImageData(x, y, board.width/10, board.width/10);
-    const data = imageData.data;
-
-    for (let i = 0; i < data.length; i += 4) {
-        data[i] = data[i] * color[0] / 255;
-        data[i + 1] = data[i + 1] * color[1] / 255;
-        data[i + 2] = data[i + 2] * color[2] / 255;
-        data[i + 3] = data[i + 3] * oppacity / 255;
-    }
-
-    boardContext.putImageData(imageData, x, y);
-}
-
-function drawTetrisOnThePreview(x, y, color) {
-    let width = 0;
-    let height = 0;
-
-    for (let i = 0; i < nextPiece.length - 1; i++) {
-        let piece = nextPiece[i];
-        width = Math.max(width, piece[0]);
-        height = Math.max(height, piece[1]);
-    }
-
-    x = x + (preview.width/5 - width * preview.width/5) / 2;
-    y = y + (preview.height/5 - height * preview.width/10) / 2;
-
-    previewContext.drawImage(img, x, y, preview.width/5, preview.width/5);
-
-    const imageData = previewContext.getImageData(x, y, preview.width/5, preview.width/5);
-    const data = imageData.data;
-
-    for (let i = 0; i < data.length; i += 4) {
-        data[i] = data[i] * color[0] / 255;
-        data[i + 1] = data[i + 1] * color[1] / 255;
-        data[i + 2] = data[i + 2] * color[2] / 255;
-        data[i + 3] = data[i + 3] * color[3] / 255;
-    }
-
-    previewContext.putImageData(imageData, x, y);
-}
-
-
-function drawTetris(x, y, color) {
-    drawTetisWithOppacity(x, y, color, 255);
-}
-
-function drawCurrentPiece() {
-    for (let i = 0 ; i < currentPiece.length - 1; i++) {
-        let piece = currentPiece[i];
-        drawTetisWithOppacity(piece[0] * board.width/10, piece[1] * board.width/10, color, oppacity);
-    }
-}
-
-function drawBoard() {
-    for (let i = 0; i < 10; i++) {
-        for (let j = 0; j < 20; j++) {
-            if (!(boardData[i][j][0] == 0 && boardData[i][j][1] == 0 && boardData[i][j][2] == 0)) {
-                drawTetris(i * board.width/10, j * board.width/10, boardData[i][j]);
-            }
-        }
-    }
-}
-
-function clearBoard() {
-    boardContext.fillStyle = 'black';
-    boardContext.fillRect(0, 0, board.width, board.height);
-}
-
-function drawGrid() {
-    boardContext.strokeStyle = 'gray'; // Couleur des lignes du quadrillage
-    boardContext.lineWidth = 0.5; // Épaisseur des lignes
-
-    // Dessiner les lignes verticales
-    for (let x = 0; x <= board.width; x += board.width / 10) {
-        boardContext.beginPath();
-        boardContext.moveTo(x, 0);
-        boardContext.lineTo(x, board.height);
-        boardContext.stroke();
-    }
-
-    // Dessiner les lignes horizontales
-    for (let y = 0; y <= board.height; y += board.height / 20) {
-        boardContext.beginPath();
-        boardContext.moveTo(0, y);
-        boardContext.lineTo(board.width, y);
-        boardContext.stroke();
-    }
-}
-
-function displayPreview() {
-    previewContext.fillStyle = 'black';
-    previewContext.fillRect(0, 0, preview.width, preview.height);
-
-    for (let i = 0; i < nextPiece.length - 1; i++) {
-        let piece = nextPiece[i];
-        drawTetrisOnThePreview(piece[0] * preview.width/5, piece[1] * preview.width/5, nextColor);
-    }
-}
-
-function refresh() {
-    clearBoard();
-    drawGrid();
-    drawBoard();
-    drawCurrentPiece();
-    displayPreview();
 }
 
 function loadTetris() {
@@ -609,16 +497,27 @@ function fasteDrop() {
 }
 
 document.addEventListener('keydown', (event) => {
-    if (event.key == 'ArrowUp' && !keyPress.includes('ArrowUp')) {
+    if (event.key == 'Escape') {
+        pauseGame();
+        return;
+    }
+    if (pause) {
+        return;
+    }
+    if (gameOver) {
+        return;
+    }
+
+    if ((event.key == 'ArrowUp' || event.key == 'w' || event.key == 'z') && !keyPress.includes('ArrowUp') && !keyPress.includes('w') && !keyPress.includes('z')) {
         rotate();
-    } else if (event.key == 'ArrowDown' && !keyPress.includes('ArrowDown')) {
+    } else if ((event.key == 'ArrowDown' || event.key == 's') && !keyPress.includes('ArrowDown') && !keyPress.includes('s')) {
         clearDownInterval();
         downInterval = setInterval(() => {
             moveDown();
             
             refresh();
         }, 50);
-    } else if (event.key == 'ArrowLeft' && !keyPress.includes('ArrowLeft')) {
+    } else if ((event.key == 'ArrowLeft' || event.key == 'a' || event.key == 'q') && !keyPress.includes('ArrowLeft') && !keyPress.includes('q') && !keyPress.includes('a')) {
         moveLeft();
 
         leftInterval = setInterval(() => {
@@ -626,7 +525,7 @@ document.addEventListener('keydown', (event) => {
 
             refresh();
         }, 100);
-    } else if (event.key == 'ArrowRight' && !keyPress.includes('ArrowRight')) {
+    } else if (((event.key == 'ArrowRight') || event.key == 'd') && !keyPress.includes('ArrowRight') && !keyPress.includes('d')) {
         moveRight();
 
         rightInterval = setInterval(() => {
@@ -645,11 +544,17 @@ document.addEventListener('keydown', (event) => {
 });
 
 document.addEventListener('keyup', (event) => {
-    if (event.key == 'ArrowDown') {
+    if (pause) {
+        return;
+    }
+    if (gameOver) {
+        return;
+    }
+    if (event.key == 'ArrowDown' || event.key == 's') {
         initAndChangeSpeedDrop();
-    } else if (event.key == 'ArrowLeft') {
+    } else if (event.key == 'ArrowLeft' || event.key == 'a' || event.key == 'q') {
         clearInterval(leftInterval);
-    } else if (event.key == 'ArrowRight') {
+    } else if (event.key == 'ArrowRight' || event.key == 'd') {
         clearInterval(rightInterval);
     }
 
@@ -662,5 +567,3 @@ img.onload = () => {
     loadMenu.classList.add('hidden');
     mainMenu.classList.remove('hidden');
 }
-
-
