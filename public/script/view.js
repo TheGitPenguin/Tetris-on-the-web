@@ -1,17 +1,21 @@
+let gapPiece = 6;
+
 function drawTetisWithOppacity(x, y, color, oppacity) {
-    boardContext.drawImage(img, x, y, board.width/10, board.width/10);
+    boardContext.fillStyle = `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${oppacity/255})`
+    boardContext.fillRect(x + gapPiece/2, y + gapPiece/2, board.width/10 - gapPiece, board.width/10 - gapPiece);
+    // boardContext.drawImage(img, x, y, board.width/10, board.width/10);
 
-    const imageData = boardContext.getImageData(x, y, board.width/10, board.width/10);
-    const data = imageData.data;
+    // const imageData = boardContext.getImageData(x, y, board.width/10, board.width/10);
+    // const data = imageData.data;
 
-    for (let i = 0; i < data.length; i += 4) {
-        data[i] = data[i] * color[0] / 255;
-        data[i + 1] = data[i + 1] * color[1] / 255;
-        data[i + 2] = data[i + 2] * color[2] / 255;
-        data[i + 3] = data[i + 3] * oppacity / 255;
-    }
+    // for (let i = 0; i < data.length; i += 4) {
+    //     data[i] = data[i] * color[0] / 255;
+    //     data[i + 1] = data[i + 1] * color[1] / 255;
+    //     data[i + 2] = data[i + 2] * color[2] / 255;
+    //     data[i + 3] = data[i + 3] * oppacity / 255;
+    // }
 
-    boardContext.putImageData(imageData, x, y);
+    // boardContext.putImageData(imageData, x, y);
 }
 
 function drawTetrisOnThePreview(x, y, color) {

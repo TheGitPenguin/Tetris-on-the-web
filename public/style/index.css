@@ -5,8 +5,8 @@ body {
     place-items: center;
     background: repeating-conic-gradient(
       from 45deg,
-      #253a5e 0% 25%,
-      #3c5e8b 0% 50%
+      #fff34f 0% 25%,
+      #ff8b07 0% 50%
     );
     background-size: max(10vw, 10svh) max(10vw, 10svh);
     background-color: #3c5e8b;
@@ -29,19 +29,21 @@ body {
     width: 300px;
     height: 600px;
 
-    background: black;
+    padding: 10px;
+
+    border-radius: 10px;
+
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+
+    background: rgb(34, 34, 34);
 }
 
 .first {
     width: 150px;
-
-    background: white;
 }
 
 .last {
     width: 150px;
-
-    background: white;
 }
 
 .main-menu {
