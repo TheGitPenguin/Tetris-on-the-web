@@ -5,11 +5,10 @@ body {
     place-items: center;
     background: repeating-conic-gradient(
       from 45deg,
-      #fff34f 0% 25%,
-      #ff8b07 0% 50%
+      #7FB196 0% 25%,
+      #3C425A 0% 50%
     );
     background-size: max(10vw, 10svh) max(10vw, 10svh);
-    background-color: #3c5e8b;
 
     font-family: 'Roboto', sans-serif;
     
@@ -35,7 +34,7 @@ body {
 
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
 
-    background: rgb(34, 34, 34);
+    background: #4E4F4D;
 }
 
 .first {
@@ -54,8 +53,6 @@ body {
     gap: 1rem;
     align-items: center;
     justify-content: center;
-
-    background-color: black;
 }
 
 .load-menu {

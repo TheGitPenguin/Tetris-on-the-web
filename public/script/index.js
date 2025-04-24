@@ -9,6 +9,17 @@ const pauseButton = document.getElementById('pause-button');
 
 const preview = document.getElementById('preview-canvas');
 
+const gameOverMenu = document.getElementById('game-over-menu');
+const restartButton = document.getElementById('restart-button');
+
+restartButton.addEventListener('click', () =>
+{
+    displayGameBoard();
+    iniGame();
+    refresh();
+}
+);
+
 startButton.addEventListener('click', () =>
 {
     startGame();
@@ -100,16 +111,14 @@ const templatePiece = [
     ]
 ];
 
-
-
 const templateColor = [
-    [255, 0, 0, 255],
-    [0, 255, 0, 255],
-    [0, 0, 255, 255],
-    [255, 255, 0, 255],
-    [0, 255, 255, 255],
-    [255, 0, 255, 255],
-    [255, 40, 130, 255]
+    [240, 87, 84, 255],
+    [254, 223, 92, 255],
+    [27, 148, 118, 255],
+    [36, 115, 155, 255],
+    [106, 190, 178, 255],
+    [164, 199, 218, 255],
+    [177, 225, 218, 255]
 ];
 
 const speedSecondsToBotomPerLevel = [
@@ -225,6 +234,8 @@ function loadTetris() {
     currentPieceToBoard();
     checkLine();
     spawnPiece();
+
+    checkEndDrop();
 }
 
 function currentPieceToBoard() {
@@ -246,6 +257,20 @@ function spawnPiece() {
         nextColor = templateColor[random];
     }
     currentPiece = nextPiece;
+
+    for (let i = 0; i < currentPiece.length - 1; i++) {
+        if (boardData[currentPiece[i][0]][currentPiece[i][1]][0] != 0 && 
+            boardData[currentPiece[i][0]][currentPiece[i][1]][1] != 0 && 
+            boardData[currentPiece[i][0]][currentPiece[i][1]][2] != 0) {
+
+            gameOver = true;
+            clearDownInterval();
+            clearInterval(endDownInterval);
+            oppacity = 255;
+            displayGameOver();
+            return;
+        }
+    }
     
     nextPiece = [];
 
@@ -366,7 +391,6 @@ function checkEndDrop() {
         initAndChangeSpeedDrop();
     }
 }
-
 
 function clearDownInterval() {
     clearInterval(downInterval);

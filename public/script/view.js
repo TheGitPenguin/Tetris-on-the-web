@@ -1,21 +1,10 @@
 let gapPiece = 6;
 
 function drawTetisWithOppacity(x, y, color, oppacity) {
+    boardContext.fillStyle = '#303f4f'; // Couleur de fond
+    boardContext.fillRect(x, y, board.width/10, board.width/10);
     boardContext.fillStyle = `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${oppacity/255})`
     boardContext.fillRect(x + gapPiece/2, y + gapPiece/2, board.width/10 - gapPiece, board.width/10 - gapPiece);
-    // boardContext.drawImage(img, x, y, board.width/10, board.width/10);
-
-    // const imageData = boardContext.getImageData(x, y, board.width/10, board.width/10);
-    // const data = imageData.data;
-
-    // for (let i = 0; i < data.length; i += 4) {
-    //     data[i] = data[i] * color[0] / 255;
-    //     data[i + 1] = data[i + 1] * color[1] / 255;
-    //     data[i + 2] = data[i + 2] * color[2] / 255;
-    //     data[i + 3] = data[i + 3] * oppacity / 255;
-    // }
-
-    // boardContext.putImageData(imageData, x, y);
 }
 
 function drawTetrisOnThePreview(x, y, color) {
@@ -71,7 +60,7 @@ function drawHologram() {
 
     for (let i = 0; i < hologramPiece.length - 1; i++) {
         let piece = hologramPiece[i];
-        drawTetisWithOppacity(piece[0] * board.width/10, piece[1] * board.width/10, color, 80);
+        drawTetisWithOppacity(piece[0] * board.width/10, piece[1] * board.width/10, color, 120);
     }
 }
 
@@ -107,8 +96,24 @@ function drawBoard() {
 }
 
 function clearBoard() {
-    boardContext.fillStyle = 'black';
-    boardContext.fillRect(0, 0, board.width, board.height);
+    // Ajouter un motif subtil en arrière-plan
+    boardContext.fillStyle = 'rgba(255, 255, 255)';
+    for (let i = 0; i < 10; i++) {
+        for (let j = 0; j < 20; j++) {
+            if ((i + j) % 2 === 0) {
+                boardContext.fillStyle = '#5d6270'; // Encore plus sombre
+            }
+            else {
+                boardContext.fillStyle = '#3d4250'; // Presque noir-bleuté
+            }
+            boardContext.fillRect(
+                i * board.width/10, 
+                j * board.height/20, 
+                board.width/10, 
+                board.height/20
+            );
+        }
+    }
 }
 
 
@@ -143,6 +148,15 @@ function displayGameBoard() {
     mainMenu.classList.add('hidden');
     loadMenu.classList.add('hidden');
     pauseMenu.classList.add('hidden');
+    gameOverMenu.classList.add('hidden');
     
     board.classList.remove('hidden');
+}
+
+function displayGameOver() {
+    mainMenu.classList.add('hidden');
+    loadMenu.classList.add('hidden');
+    board.classList.add('hidden');
+
+    gameOverMenu.classList.remove('hidden');
 }
