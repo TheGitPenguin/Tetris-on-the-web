@@ -1,4 +1,5 @@
-const board = document.getElementById('tetris-canvas');
+let board = document.getElementById('tetris-canvas');
+const boardBis = document.getElementById('tetris-canvas').cloneNode(true);
 const scoreElement = document.getElementById('score-value');
 const loadMenu = document.getElementById('load-menu');
 const mainMenu = document.getElementById('main-menu');
@@ -7,15 +8,21 @@ const pauseMenu = document.getElementById('pause-menu');
 const startButton = document.getElementById('start-button');
 const pauseButton = document.getElementById('pause-button');
 
-const preview = document.getElementById('preview-canvas');
+let preview = document.getElementById('preview-canvas');
+const previewBis = document.getElementById('preview-canvas').cloneNode(true);
 
 const gameOverMenu = document.getElementById('game-over-menu');
 const restartButton = document.getElementById('restart-button');
 
+const boardContainer = document.getElementById('board-container');
+const previewContainer = document.getElementById('preview-container');
+
+const buttonContainer = document.getElementById('pause-container');
+
 restartButton.addEventListener('click', () =>
 {
     displayGameBoard();
-    iniGame();
+    startGame();
     refresh();
 }
 );
@@ -30,8 +37,8 @@ pauseButton.addEventListener('click', () =>
     pauseGame();
 });
 
-const boardContext = board.getContext('2d');
-const previewContext = preview.getContext('2d');
+let boardContext = board.getContext('2d');
+let previewContext = preview.getContext('2d');
 
 boardContext.fillStyle = 'black';
 boardContext.fillRect(0, 0, board.width, board.height);
@@ -57,7 +64,7 @@ let lines = 0;
 let speed = 1000;
 
 let pause = false;
-let gameOver = false;
+let gameOver = true;
 
 const templatePiece = [
     [ // ok
@@ -200,10 +207,14 @@ function startGame() {
 }
 
 function pauseGame() {
+    if (gameOver) {
+        return;
+    }
+
     if (pause) {
         pause = false;
         displayGameBoard();
-        initAndChangeSpeedDrop();
+        //initAndChangeSpeedDrop();
     } else {
         pause = true;
         displayPause();
@@ -521,7 +532,7 @@ function fasteDrop() {
 }
 
 document.addEventListener('keydown', (event) => {
-    if (event.key == 'Escape') {
+    if (event.key == 'Escape' && !keyPress.includes('Escape')) {
         pauseGame();
         return;
     }
@@ -588,6 +599,5 @@ document.addEventListener('keyup', (event) => {
 });
 
 img.onload = () => {
-    loadMenu.classList.add('hidden');
-    mainMenu.classList.remove('hidden');
+    displayMainMenu();
 }

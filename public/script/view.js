@@ -8,31 +8,10 @@ function drawTetisWithOppacity(x, y, color, oppacity) {
 }
 
 function drawTetrisOnThePreview(x, y, color) {
-    let width = 0;
-    let height = 0;
-
-    for (let i = 0; i < nextPiece.length - 1; i++) {
-        let piece = nextPiece[i];
-        width = Math.max(width, piece[0]);
-        height = Math.max(height, piece[1]);
-    }
-
-    x = x + (preview.width/5 - width * preview.width/5) / 2;
-    y = y + (preview.height/5 - height * preview.width/10) / 2;
-
-    previewContext.drawImage(img, x, y, preview.width/5, preview.width/5);
-
-    const imageData = previewContext.getImageData(x, y, preview.width/5, preview.width/5);
-    const data = imageData.data;
-
-    for (let i = 0; i < data.length; i += 4) {
-        data[i] = data[i] * color[0] / 255;
-        data[i + 1] = data[i + 1] * color[1] / 255;
-        data[i + 2] = data[i + 2] * color[2] / 255;
-        data[i + 3] = data[i + 3] * color[3] / 255;
-    }
-
-    previewContext.putImageData(imageData, x, y);
+    previewContext.fillStyle = '#303f4f'; // Couleur de fond
+    previewContext.fillRect(x, y, preview.width/5, preview.width/5);
+    previewContext.fillStyle = `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${oppacity})`
+    previewContext.fillRect(x + gapPiece/2, y + gapPiece/2, preview.width/5 - gapPiece, preview.width/5 - gapPiece);
 }
 
 
@@ -97,14 +76,20 @@ function drawBoard() {
 
 function clearBoard() {
     // Ajouter un motif subtil en arrière-plan
-    boardContext.fillStyle = 'rgba(255, 255, 255)';
+
+    boardContainer.innerHTML = '';
+    board = boardBis.cloneNode(true);
+    boardContainer.appendChild(board);
+
+    boardContext = board.getContext('2d');
+
     for (let i = 0; i < 10; i++) {
         for (let j = 0; j < 20; j++) {
             if ((i + j) % 2 === 0) {
-                boardContext.fillStyle = '#5d6270'; // Encore plus sombre
+                boardContext.fillStyle = '#6d728020'; // Encore plus sombre
             }
             else {
-                boardContext.fillStyle = '#3d4250'; // Presque noir-bleuté
+                boardContext.fillStyle = '#3d425020'; // Presque noir-bleuté
             }
             boardContext.fillRect(
                 i * board.width/10, 
@@ -118,12 +103,40 @@ function clearBoard() {
 
 
 function displayPreview() {
-    previewContext.fillStyle = 'black';
-    previewContext.fillRect(0, 0, preview.width, preview.height);
+    previewContainer.innerHTML = '';
+
+    preview = previewBis.cloneNode(true);
+    previewContainer.appendChild(preview);
+
+    previewContext = preview.getContext('2d');
+
+
+    // make damier
+
+    for (let x = 0; x < 5 ; x++) {
+        for (let y = 0;y < 5; y++) {
+            if ((x + y) % 2 === 0) {
+                previewContext.fillStyle = '#6d728020'; // Encore plus sombre
+            }
+            else {
+                previewContext.fillStyle = '#3d425020'; // Presque noir-bleuté
+            }
+
+            previewContext.fillRect(
+                x * preview.width/5, 
+                y * preview.height/5, 
+                preview.width/5, 
+                preview.height/5
+            );
+        }
+    }
+    
+    let xDif = nextPiece[nextPiece.length - 1][0] - 2;
+    let yDif = nextPiece[nextPiece.length - 1][1] + 0.5;
 
     for (let i = 0; i < nextPiece.length - 1; i++) {
         let piece = nextPiece[i];
-        drawTetrisOnThePreview(piece[0] * preview.width/5, piece[1] * preview.width/5, nextColor);
+        drawTetrisOnThePreview((piece[0] - xDif) * preview.width/5, (piece[1] + yDif) * preview.width/5, nextColor);
     }
 }
 
@@ -136,11 +149,22 @@ function refresh() {
     displayPreview();
 }
 
+function displayMainMenu() {
+    mainMenu.classList.remove('hidden');
+    loadMenu.classList.add('hidden');
+    boardContainer.classList.add('hidden');
+    pauseButton.classList.remove('paused');
+    buttonContainer.classList.add('hidden');
+    
+    gameOverMenu.classList.add('hidden');
+}
+
 function displayPause() {
     mainMenu.classList.add('hidden');
     loadMenu.classList.add('hidden');
-    board.classList.add('hidden');
-
+    boardContainer.classList.add('hidden');
+    
+    pauseButton.classList.add('paused');
     pauseMenu.classList.remove('hidden');
 }
 
@@ -149,14 +173,18 @@ function displayGameBoard() {
     loadMenu.classList.add('hidden');
     pauseMenu.classList.add('hidden');
     gameOverMenu.classList.add('hidden');
+    pauseButton.classList.remove('paused');
+    buttonContainer.classList.remove('hidden');
     
-    board.classList.remove('hidden');
+    boardContainer.classList.remove('hidden');
 }
 
 function displayGameOver() {
     mainMenu.classList.add('hidden');
     loadMenu.classList.add('hidden');
-    board.classList.add('hidden');
+    boardContainer.classList.add('hidden');
+    pauseButton.classList.remove('paused');
+    buttonContainer.classList.add('hidden');
 
     gameOverMenu.classList.remove('hidden');
 }
