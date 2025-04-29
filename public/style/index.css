@@ -16,6 +16,8 @@ body {
     justify-content: center;
     flex-direction: row;
 
+    justify-content: space-evenly;
+
     gap: 1rem;
 }
 
@@ -128,9 +130,6 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-
-
-  
 }
 
 .pauseContainer {
@@ -174,4 +173,19 @@ body {
   
   .hidden {
     display: none;
+}
+
+.scoreboard {
+  width: 200px;
+  height: 600px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: center;
+}
+
+.options {
+  width: 200px;
+  height: 600px;
 }

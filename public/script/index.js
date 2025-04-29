@@ -19,6 +19,10 @@ const previewContainer = document.getElementById('preview-container');
 
 const buttonContainer = document.getElementById('pause-container');
 
+const highScoreTemplate = document.getElementById('high-score-template');
+
+const highScoresList = document.getElementById('high-scores-list');
+
 restartButton.addEventListener('click', () =>
 {
     displayGameBoard();
@@ -174,6 +178,7 @@ const MOVEDOWN = 3;
 const ROTATE = 4;
 const MOVEDOWNFAST = 5;
 const RESPAWN = 6;
+const CHANGENEXTPIECE = 7;
 
 let history = [];
 
@@ -185,6 +190,7 @@ function startGame() {
     currentPiece = [];
     color = [];
     history = [];
+    keyPress = [];
 
     for (let i = 0; i < 10; i++) {
         boardData[i] = [];
@@ -246,7 +252,7 @@ function loadTetris() {
     checkLine();
     spawnPiece();
 
-    checkEndDrop();
+    //checkEndDrop();
 }
 
 function currentPieceToBoard() {
@@ -259,42 +265,100 @@ function currentPieceToBoard() {
 }
 
 function spawnPiece() {
-    const random = Math.floor(Math.random() * templatePiece.length);
+    let random = 0;
 
     if (nextPiece.length == 0) {
+        random = Math.floor(Math.random() * templatePiece.length);
+
         for (let i = 0; i < templatePiece[random].length; i++) {
             nextPiece.push([templatePiece[random][i][0], templatePiece[random][i][1]]);
         }
         nextColor = templateColor[random];
+
+        history.push([CHANGENEXTPIECE, random]);
     }
     currentPiece = nextPiece;
 
+    
+    if (gameOver) {
+        return;
+    }
+    
     for (let i = 0; i < currentPiece.length - 1; i++) {
         if (boardData[currentPiece[i][0]][currentPiece[i][1]][0] != 0 && 
             boardData[currentPiece[i][0]][currentPiece[i][1]][1] != 0 && 
             boardData[currentPiece[i][0]][currentPiece[i][1]][2] != 0) {
-
-            gameOver = true;
-            clearDownInterval();
-            clearInterval(endDownInterval);
-            oppacity = 255;
-            displayGameOver();
-            return;
+                
+                gameOver = true;
+                clearDownInterval();
+                clearInterval(endDownInterval);
+                oppacity = 255;
+                displayGameOver();
+                sendScore();
+                return;
         }
     }
-    
+        
+    random = Math.floor(Math.random() * templatePiece.length);
     nextPiece = [];
 
     for (let i = 0; i < templatePiece[random].length; i++) {
         nextPiece.push([templatePiece[random][i][0], templatePiece[random][i][1]]);
     }
 
+    history.push([CHANGENEXTPIECE, random]);
+
     color = nextColor;
     nextColor = templateColor[random];
-
-    history.push([RESPAWN, random]);
 }
 
+async function sendScore() {
+    const playerName = prompt('Enter your name:');
+    if (playerName) {
+        
+        const data = {
+            score,
+            history,
+            playerName
+        };
+        console.log(data);
+
+        try {
+            // Send a PUT request to the server
+            const query = await fetch('/api/sendScore', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+            
+            // Check if the response is ok before parsing
+            if (!query.ok) {
+                throw new Error(`Server returned ${query.status}: ${query.statusText}`);
+            }
+            
+            // Check the content type to ensure it's JSON
+            const contentType = query.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error('Server did not return JSON');
+            }
+        
+            // Get the response body
+            const response = await query.json();
+
+            if (response.success) {
+                console.log('Score and history saved successfully');
+            }
+            else {
+                console.error('Error saving score and history:', response.error);
+            }
+        } catch (error) {
+            console.error('Failed to save score:', error.message);
+            alert('Could not save your score. Please try again later.');
+        }
+    }
+}
 
 function ifMoveTo(x, y) {
     return canMoveTo(x, y, currentPiece);
@@ -518,7 +582,7 @@ function moveRight() {
     return true;
 }
 
-function fasteDrop() {
+function fastDrop() {
     while (ifMoveTo(0, 1)) {
         moveDown();
     }
@@ -528,7 +592,6 @@ function fasteDrop() {
     oppacity = 255;
 
     loadTetris();
-    history.push([MOVEDOWNFAST, 0]);
 }
 
 document.addEventListener('keydown', (event) => {
@@ -568,7 +631,7 @@ document.addEventListener('keydown', (event) => {
             refresh();
         }, 100);
     } else if (event.key == ' ' && !keyPress.includes(' ')) {
-        fasteDrop();
+        fastDrop();
     }
 
     refresh();
@@ -579,18 +642,14 @@ document.addEventListener('keydown', (event) => {
 });
 
 document.addEventListener('keyup', (event) => {
-    if (pause) {
-        return;
-    }
-    if (gameOver) {
-        return;
-    }
-    if (event.key == 'ArrowDown' || event.key == 's') {
-        initAndChangeSpeedDrop();
-    } else if (event.key == 'ArrowLeft' || event.key == 'a' || event.key == 'q') {
-        clearInterval(leftInterval);
-    } else if (event.key == 'ArrowRight' || event.key == 'd') {
-        clearInterval(rightInterval);
+    if (!pause && !gameOver) {
+        if (event.key == 'ArrowDown' || event.key == 's') {
+            initAndChangeSpeedDrop();
+        } else if (event.key == 'ArrowLeft' || event.key == 'a' || event.key == 'q') {
+            clearInterval(leftInterval);
+        } else if (event.key == 'ArrowRight' || event.key == 'd') {
+            clearInterval(rightInterval);
+        }
     }
 
     keyPress = keyPress.filter((key) => {

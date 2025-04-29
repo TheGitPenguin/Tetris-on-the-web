@@ -188,3 +188,31 @@ function displayGameOver() {
 
     gameOverMenu.classList.remove('hidden');
 }
+
+let intervalDisplayScoreBoard = null;
+
+displayScoreBoard();
+
+function displayScoreBoard() {
+    if (intervalDisplayScoreBoard) {
+        clearInterval(intervalDisplayScoreBoard);
+        intervalDisplayScoreBoard = null;
+    }
+
+    intervalDisplayScoreBoard = setInterval(() => {
+        fetch('/api/getHighScores')
+            .then(response => response.json())
+            .then(data => {
+                highScoresList.innerHTML = '';
+
+                data.forEach(score => {
+                    // Clone template content properly
+                    const scoreElement = document.importNode(highScoreTemplate.content, true).firstElementChild;
+                    scoreElement.querySelector('.high-score-name').innerHTML = score.player_name;
+                    scoreElement.querySelector('.high-score-score').innerHTML = score.score;
+                    highScoresList.appendChild(scoreElement);
+                });
+            })
+            .catch(error => console.error('Error fetching high scores:', error));
+    }, 1000);
+}
