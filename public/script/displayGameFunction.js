@@ -91,6 +91,20 @@ function refreshBoard() {
     }
 
     drawCurrentPiece();
+    drawHologram();
+}
+
+function drawHologram() {
+    let pieceBis = clonePiece(game.currentPiece);
+
+    while (ifMoveDown(pieceBis, game)) {
+        moveDown(pieceBis);
+    }
+    
+    for (let i = 0; i < pieceBis.squares.length; i++) {
+        let square = pieceBis.squares[i];
+        drawSquare(square.x, square.y, square, 0.5);
+    }
 }
 
 function displayPreview(game) {
