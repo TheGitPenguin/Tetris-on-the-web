@@ -4,8 +4,15 @@
 <head>
     <meta charset="utf-8" />
     <title>Tetris on the web</title>
-    <script src="./script/index.js" defer></script>
-    <script src="./script/view.js" defer></script>
+    <script src="./script/element.js" defer></script>
+    <script src="./script/var.js" defer></script>
+    <script src="./script/displayGameFunction.js" defer></script>
+    <script src="./script/displayMenuFunction.js" defer></script>
+    <script src="./script/contruct.js" defer></script>
+    <script src="./script/magicVariable.js" defer></script>
+    <script src="./script/gameFunction.js" defer></script>
+    <script src="./script/controller.js" defer></script>
+    <script src="./script/menuController.js" defer></script>
     <link rel="stylesheet" href="./style/index.css" />
 </head>
 
@@ -37,7 +44,7 @@
             <div class="hidden" id="board-container">
                 <canvas  id="tetris-canvas" width="300" height="600"></canvas>
             </div>
-            <div class="main-menu hidden" id="main-menu" >
+            <div class="main-menu" id="main-menu" >
                 <button id="start-button">Start</button>
             </div>
             <div class="gameOver hidden" id="game-over-menu">
@@ -50,7 +57,7 @@
                 <button id="resume-button">Resume</button>
                 <button id="main-menu">Main Menu</button>
             </div>
-            <div class="load-menu" id="load-menu">
+            <div class="load-menu hidden" id="load-menu">
                 <span class="loader"></span>
                 <p>Loading...</p>
             </div>
