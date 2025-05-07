@@ -90,8 +90,8 @@ function refreshBoard() {
         drawSquare(square.x, square.y, square);
     }
 
-    drawCurrentPiece();
     drawHologram();
+    drawCurrentPiece();
 }
 
 function drawHologram() {

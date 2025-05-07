@@ -1,4 +1,4 @@
-const speedSecondsToBotomPerLevel = [
+const speedSecondsToBottomPerLevel = [
     15.974, //0
     14.31,  //1
     12.646, //2
@@ -33,3 +33,10 @@ const speedSecondsToBotomPerLevel = [
 
 const width = 10;
 const height = 20;
+
+const DOWNHISTORY = 1;
+const LEFTHISTORY = 2;
+const RIGHTHISTORY = 3;
+const ROTATEHISTORY = 4;
+const ENDPARTYHISTORY = 5;
+const ISNEXTHISTORY = 6;

@@ -104,292 +104,67 @@ const templateColor = [
     [177, 225, 218, 255]
 ];
 
-const MOVELEFT = 1;
-const MOVERIGHT = 2;
-const MOVEDOWN = 3;
-const ROTATE = 4;
-const MOVEDOWNFAST = 5;
-const RESPAWN = 6;
-const CHANGENEXTPIECE = 7;
-
-function ifPiece(x, y, board) {
-    if (x < 0 || x >= 10 || y >= 20) {
-        return true;
-    }
-
-    if (y < 0) {
-        return false;
-    }
-
-    if (board[x][y][0] == 0 && board[x][y][1] == 0 && board[x][y][2] == 0) {
-        return false;
-    }
-
-    return true;
-}
-
-function canMoveTo(x, y, piece, board) {
-    for (let i = 0; i < piece.length - 1; i++) {
-        if (piece[i][0] + x < 0 || piece[i][0] + x >= 10 || piece[i][1] + y >= 20 || ifPiece(piece[i][0] + x, piece[i][1] + y, board)) {
-            return false;
-        }
-    }
-    return true;
-}
-
-function ifRotate(piece, board) {
-    for (let i = 0; i < piece.length - 1; i++) {
-        if (piece[i][0] < 0 || piece[i][0] >= 10 || piece[i][1] >= 20 || ifPiece(piece[i][0], piece[i][1], board)) {
-            return false;
-        }
-    }
-    return true;
-}
-
-function moveDown(piece, board) {
-    if (canMoveTo(0, 1, piece, board)) {
-        for (let i = 0; i < piece.length; i++) {
-            piece[i][1]++;
-        }
-    }
-}
-
-function moveLeft(piece, board) {
-    if (canMoveTo(-1, 0, piece, board)) {
-        for (let i = 0; i < piece.length; i++) {
-            piece[i][0]--;
-        }
-    }
-}
-
-function moveRight(piece, board) {
-    if (canMoveTo(1, 0, piece, board)) {
-        for (let i = 0; i < piece.length; i++) {
-            piece[i][0]++;
-        }
-    }
-}
-
-function rotate(piece, board) {
-    if (piece.length == 0) {
-        return;
-    }
-
-    let currentPieceCopy = [];
-
-    for (let i = 0; i < piece.length; i++) {
-        currentPieceCopy.push([piece[i][0], piece[i][1]]);
-    }
-
-    const center = currentPieceCopy[currentPieceCopy.length - 1];
-    for (let i = 0; i < piece.length - 1; i++) {
-        const x = currentPieceCopy[i][0] - center[0];
-        const y = currentPieceCopy[i][1] - center[1];
-
-        currentPieceCopy[i][0] = center[0] - y;
-        currentPieceCopy[i][1] = center[1] + x;
-    }
-
-
-    if (ifRotate(currentPieceCopy, board)) {
-        piece = currentPieceCopy;
-        // Don't modify history in verification function
-    }
-    else {
-        for (let x = -1; x <= 1; x++) {
-            for (let y = 0; y >= -1; y--) {
-                if (canMoveTo(x, y, currentPieceCopy, board)) {
-                    moveToPiece(x, y, currentPieceCopy);
-                    piece = currentPieceCopy;
-
-                    x = 2;
-                    y = -2;
-                }
-            }
-        }
-    }
-}
-
-function moveToPiece(x, y, piece) {
-    for (let i = 0; i < piece.length; i++) {
-        piece[i][0] += x;
-        piece[i][1] += y;
-    }
-}
-
-function checkLine(board, scoreObject) {
-    let lineFilled = 0;
-    let score = 0;
-    let lines = 0;
-    let level = 0;
-
-    for (let i = 0; i < 20; i++) {
-        let check = true;
-
-        for (let j = 0; j < 10; j++) {
-            if (board[j][i][0] == 0 && board[j][i][1] == 0 && board[j][i][2] == 0) {
-                check = false;
-                break;
-            }
-        }
-
-        if (check) {
-            for (let j = i; j > 0; j--) {
-                for (let k = 0; k < 10; k++) {
-                    board[k][j] = board[k][j - 1];
-                }
-            }
-
-            for (let k = 0; k < 10; k++) {
-                board[k][0] = [0, 0, 0, 255];
-            }
-
-            lineFilled++;
-        }
-    }
-
-    if (lineFilled == 1) {
-        score += 40;
-    }
-    else if (lineFilled == 2) {
-        score += 100;
-    }
-    else if (lineFilled == 3) {
-        score += 300;
-    }
-    else if (lineFilled == 4) {
-        score += 1200;
-    }
-
-    lines += lineFilled;
-    level = Math.floor(lines / 10);
-
-    scoreObject.score += score;
-    scoreObject.lines += lineFilled;
-    scoreObject.level = Math.floor(scoreObject.lines / 10);
-}
-
-function verifieHystoryAndScore(score, history) {
-    let board = [];
-
-    for (let i = 0; i < 10; i++) {
-        board[i] = [];
-        for (let j = 0; j < 20; j++) {
-            board[i][j] = [0, 0, 0, 255];
-        }
-    }
-
-    let piece = [];
-    let nextPiece = [];
-    let nextIndex = 0;
-
-    let scoreObject = {
-        score: 0,
-        lines: 0,
-        level: 0
-    };
-
-    for (let i = 0; i < history.length; i++) {
-        if (history[i][0] === CHANGENEXTPIECE) {
-            // Only place non-fractional coordinates on the board
-            for (let j = 0; j < piece.length - 1; j++) {
-                if (Number.isInteger(piece[j][0]) && Number.isInteger(piece[j][1]) && 
-                    piece[j][0] >= 0 && piece[j][0] < 10 && 
-                    piece[j][1] >= 0 && piece[j][1] < 20) {
-                    board[piece[j][0]][piece[j][1]] = [templateColor[nextIndex][0], templateColor[nextIndex][1], templateColor[nextIndex][2], templateColor[nextIndex][3]];
-                }
-            }
-
-            checkLine(board, scoreObject);
-
-            nextIndex = history[i][1];
-            
-            // Reset piece and copy from template
-            piece = [];
-            for (let j = 0; j < templatePiece[nextIndex].length; j++) {
-                piece.push([templatePiece[nextIndex][j][0], templatePiece[nextIndex][j][1]]);
-            }
-
-            // Set up next piece
-            nextPiece = [];
-            let nextNextIndex = (i+1 < history.length && history[i+1][0] === CHANGENEXTPIECE) ? history[i+1][1] : 0;
-            for (let j = 0; j < templatePiece[nextNextIndex].length; j++) {
-                nextPiece.push([templatePiece[nextNextIndex][j][0], templatePiece[nextNextIndex][j][1]]);
-            }
-        }
-        else if (history[i][0] === MOVEDOWN) {
-            moveDown(piece, board);
-        }
-        else if (history[i][0] === MOVELEFT) {
-            moveLeft(piece, board);
-        }
-        else if (history[i][0] === MOVERIGHT) {
-            moveRight(piece, board);
-        }
-        else if (history[i][0] === ROTATE) {
-            rotate(piece, board);
-        }
-    }
-
-    console.log("Calculated score:", scoreObject.score, "Submitted score:", score);
-    return score === scoreObject.score;
-}
-
 app.put('/api/sendScore', (req, res) => {
 
     let score = req.body.score;
-    let history = req.body.history;
+    // let history = req.body.history;
+    let lines = req.body.lines;
     let playerName = req.body.playerName;
 
-    // if (score === null || history === null || playerName === null) {
-    //     return res.status(400).send('Missing required fields');
+    // Vérifier si le score est un nombre valide
+    if (isNaN(score) || score < 0) {
+        return res.status(400).send('Invalid score');
+    }
+    // Vérifier si l'historique est un tableau valide
+    // if (!Array.isArray(history)) {
+    //     return res.status(400).send('Invalid history');
     // }
-
-    // if (score < 0) {
-    //     return res.status(400).send('Score cannot be negative');
-    // }
-
-    // if (history.length === 0) {
-    //     return res.status(400).send('History cannot be empty');
-    // }
-
-    if (!verifieHystoryAndScore(score, history)) {
-        return res.status(400).send('Invalid history or score');
+    // Vérifier si le nom du joueur est une chaîne de caractères valide
+    if (typeof playerName !== 'string' || playerName.trim() === '') {
+        return res.status(400).send('Invalid player name');
+    }
+    // Vérifier si le score est supérieur à 0 et inférieur à 1200 * (lines/4)
+    if ((lines/4) * 1200 < score) {
+        return res.status(400).send('Invalid score');
+    }
+    // Vérifier si la line est un nombre valide
+    if (isNaN(lines) || lines < 0) {
+        return res.status(400).send('Invalid lines');
     }
 
     // Vérifier si le dossier des historiques existe, le créer si nécessaire
-    const historyDir = './datas/histories';
-    if (!fs.existsSync(historyDir)) {
-        fs.mkdirSync(historyDir, { recursive: true });
-    }
+    // const historyDir = './datas/histories';
+    // if (!fs.existsSync(historyDir)) {
+    //     fs.mkdirSync(historyDir, { recursive: true });
+    // }
 
     // Date du jour
 
-    const date = new Date();
-    const dateString = date.toISOString().split('T')[0]; // Format YYYY-MM-DD
+    // const date = new Date();
+    // const dateString = date.toISOString().split('T')[0]; // Format YYYY-MM-DD
 
-    // Vérifier si un fichier avec ce nom existe déjà et ajouter un chiffre si nécessaire
-    let finalPlayerName = playerName + dateString;
-    let counter = 0;
-    let historyFilePath = `${historyDir}/${finalPlayerName}.json`;
+    // // Vérifier si un fichier avec ce nom existe déjà et ajouter un chiffre si nécessaire
+    // let finalPlayerName = playerName + dateString;
+    // let counter = 0;
+    // let historyFilePath = `${historyDir}/${finalPlayerName}.json`;
 
-    while (fs.existsSync(historyFilePath)) {
-        counter++;
-        finalPlayerName = `${playerName}${dateString}${counter}`;
-        historyFilePath = `${historyDir}/${finalPlayerName}.json`;
-    }
+    // while (fs.existsSync(historyFilePath)) {
+    //     counter++;
+    //     finalPlayerName = `${playerName}${dateString}${counter}`;
+    //     historyFilePath = `${historyDir}/${finalPlayerName}.json`;
+    // }
 
-    // Écrire l'historique dans le fichier
-    try {
-        fs.writeFileSync(historyFilePath, JSON.stringify(history));
-        console.log(`History written to ${historyFilePath}`);
-    } catch (err) {
-        console.error('Error writing history file:', err);
-        return res.status(500).send('Error writing history file');
-    }
+    // // Écrire l'historique dans le fichier
+    // try {
+    //     fs.writeFileSync(historyFilePath, JSON.stringify(history));
+    //     console.log(`History written to ${historyFilePath}`);
+    // } catch (err) {
+    //     console.error('Error writing history file:', err);
+    //     return res.status(500).send('Error writing history file');
+    // }
 
     // 
-    db.run('INSERT INTO scores (player_name, score, pathHistory) VALUES (?, ?, ?)', [playerName, score, historyFilePath])
+    db.run('INSERT INTO scores (player_name, score, pathHistory) VALUES (?, ?, ?)', [playerName, score, "/"])
         .then(() => {
             console.log(`Score inserted for ${playerName}`);
         })

@@ -22,3 +22,7 @@ const buttonContainer = document.getElementById('pause-container');
 const highScoreTemplate = document.getElementById('high-score-template');
 
 const highScoresList = document.getElementById('high-scores-list');
+
+const resumeButton = document.getElementById('resume-button');
+const mainMenuButton = document.getElementById('main-menu-button');
+const mainMenuButtonBis = document.getElementById('main-menu-button2');

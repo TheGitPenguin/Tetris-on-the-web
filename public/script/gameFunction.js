@@ -1,4 +1,4 @@
-function ifPieceInBoard(x, y, game) {
+function ifPieceInBoard(x, y) {
     let board = game.board;
 
     if (x < 0 || x >= width || y >= height) {
@@ -14,32 +14,32 @@ function ifPieceInBoard(x, y, game) {
     return false;
 }
 
-function ifMovePiece(x, y, piece, game) {
+function ifMovePiece(x, y, piece = game.currentPiece) {
     for (let i = 0; i < piece.squares.length; i++) {
         let square = piece.squares[i];
         let newX = square.x + x;
         let newY = square.y + y;
 
-        if (ifPieceInBoard(newX, newY, game)) {
+        if (ifPieceInBoard(newX, newY)) {
             return false;
         }
     }
     return true;
 }
 
-function ifMoveDown(piece, game) {
-    return ifMovePiece(0, 1, piece, game);
+function ifMoveDown(piece = game.currentPiece) {
+    return ifMovePiece(0, 1, piece);
 }
 
-function ifMoveLeft(piece, game) {
-    return ifMovePiece(-1, 0, piece, game);
+function ifMoveLeft(piece = game.currentPiece) {
+    return ifMovePiece(-1, 0, piece);
 }
 
-function ifMoveRight(piece, game) {
-    return ifMovePiece(1, 0, piece, game);
+function ifMoveRight(piece = game.currentPiece) {
+    return ifMovePiece(1, 0, piece);
 }
 
-function ifRotate(piece, game) {
+function ifRotate(piece = game.currentPiece) {
     let centerX = piece.xCenter;
     let centerY = piece.yCenter;
 
@@ -51,14 +51,14 @@ function ifRotate(piece, game) {
         let newX = -y + centerX;
         let newY = x + centerY;
 
-        if (ifPieceInBoard(newX, newY, game)) {
+        if (ifPieceInBoard(newX, newY)) {
             return false;
         }
     }
     return true;
 }
 
-function moveDown(piece) {
+function moveDown(piece = game.currentPiece) {
     for (let i = 0; i < piece.squares.length; i++) {
         let square = piece.squares[i];
         square.y += 1;
@@ -67,8 +67,8 @@ function moveDown(piece) {
     piece.yCenter += 1;
 }
 
-function moveLeft(piece) {
-    if (!ifMoveLeft(piece, game)) {
+function moveLeft(piece = game.currentPiece) {
+    if (!ifMoveLeft(piece)) {
         return;
     }
 
@@ -80,8 +80,8 @@ function moveLeft(piece) {
     piece.xCenter -= 1;
 }
 
-function moveRight(piece) {
-    if (!ifMoveRight(piece, game)) {
+function moveRight(piece = game.currentPiece) {
+    if (!ifMoveRight(piece)) {
         return;
     }
 
@@ -96,7 +96,7 @@ function moveRight(piece) {
 function ifCantRotate(piece, game) {
     let centerX = piece.xCenter;
     let centerY = piece.yCenter;
-    
+
     let moveX = [0, -1, 1, -2, 2];
     let moveY = [0, -1];
 
@@ -155,7 +155,7 @@ function rotatePiece(piece) {
     }
 }
 
-function fixPieceToBoard(piece, game) {
+function fixPieceToBoard(piece = game.currentPiece) {
     for (let i = 0; i < piece.squares.length; i++) {
         let square = piece.squares[i];
         game.board.push(square);
@@ -163,18 +163,18 @@ function fixPieceToBoard(piece, game) {
 
     opacityCurrentPiece = 1;
 
-    checkLine(game);
+    checkLine();
     // Vous pouvez également gérer ici la création d'une nouvelle pièce
     // ou vérifier si des lignes doivent être supprimées.
 }
 
-function checkLine(game, ifNoFall = false) {
+function checkLine(ifNoFall = false) {
     let lineFilled = [];
 
     for (let i = 0; i < 20; i++) {
         let filled = true;
         for (let j = 0; j < 10; j++) {
-            if (!ifPieceInBoard(j, i, game)) {
+            if (!ifPieceInBoard(j, i)) {
                 filled = false;
                 break;
             }
@@ -217,46 +217,108 @@ function checkLine(game, ifNoFall = false) {
         game.score += 1200;
     }
 
-    scoreElement.innerText = game.score;
     game.lines += lineFilled.length;
     game.level = Math.floor(game.lines / 10);
 }
 
-function switchPiece(game) {
+function switchPiece() {
     game.currentPiece = game.nextPiece;
     game.nextPiece = getRandomPiece();
 
     for (let i = 0; i < game.currentPiece.squares.length; i++) {
-        if (ifPieceInBoard(game.currentPiece.squares[i].x, game.currentPiece.squares[i].y, game)) {
-            game.gameOver = true;
-            clearInterval(dropInterval);
-            clearInterval(leftInterval);
-            clearInterval(rightInterval);
-            clearInterval(refreshInterval);
-
-            clearInterval(endDropInterval);
-            endDropInterval = null;
-            opacityCurrentPiece = 1;
-            game.currentPiece = null;
-            dropInterval = null;
-            refreshInterval = null;
-
-            displayGameOver();
+        let x = game.currentPiece.squares[i].x;
+        let y = game.currentPiece.squares[i].y;
+        if (ifPieceInBoard(x, y)) {
+            finishGame();
             return;
         }
     }
 }
 
-function setSpeed(game) {
-    if (game.level > 29) {
-        game.speed = (speedSecondsToBotomPerLevel[29] / 20) * 1000;
+function finishGame(sendScore = true, gameOver = true) {
+    game.gameOver = true;
+    clearInterval(dropInterval);
+    clearInterval(leftInterval);
+    clearInterval(rightInterval);
+    clearInterval(refreshInterval);
+
+    clearInterval(endDropInterval);
+    endDropInterval = null;
+    opacityCurrentPiece = 1;
+    game.currentPiece = null;
+    dropInterval = null;
+    refreshInterval = null;
+
+    if (gameOver) {
+        displayGameOver();
+    } else {
+        displayMainMenu();
     }
-    else {
-        game.speed = (speedSecondsToBotomPerLevel[game.level] / 20) * 1000;
+
+    if (sendScore) {
+        const playerName = prompt('Enter your name:');
+
+        sendScore(game, playerName);
     }
 }
 
-function endDrop(game) {
+async function sendScore(playerName) {
+    if (playerName) {
+
+        const data = {
+            score: game.score,
+            lines: game.lines,
+            playerName
+        };
+        console.log(data);
+
+        try {
+            // Send a PUT request to the server
+            const query = await fetch('/api/sendScore', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            // Check if the response is ok before parsing
+            if (!query.ok) {
+                throw new Error(`Server returned ${query.status}: ${query.statusText}`);
+            }
+
+            // Check the content type to ensure it's JSON
+            const contentType = query.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error('Server did not return JSON');
+            }
+
+            // Get the response body
+            const response = await query.json();
+
+            if (response.success) {
+                console.log('Score and history saved successfully');
+            }
+            else {
+                console.error('Error saving score and history:', response.error);
+            }
+        } catch (error) {
+            console.error('Failed to save score:', error.message);
+            alert('Could not save your score. Please try again later.');
+        }
+    }
+}
+
+function setSpeed() {
+    if (game.level > 29) {
+        game.speed = (speedSecondsToBottomPerLevel[29] / 20) * 1000;
+    }
+    else {
+        game.speed = (speedSecondsToBottomPerLevel[game.level] / 20) * 1000;
+    }
+}
+
+function endDrop() {
     let piece = game.currentPiece;
 
     // La pièce ne peut plus descendre, elle est fixée sur le plateau
@@ -278,18 +340,18 @@ function endDrop(game) {
     }
 }
 
-function fastDrop(game, piece = game.currentPiece) {
+function fastDrop(piece = game.currentPiece) {
     if (piece) {
         let canMoveDown = true;
 
         while (canMoveDown) {
-            canMoveDown = ifMoveDown(piece, game);
+            canMoveDown = ifMoveDown();
             if (canMoveDown) {
-                moveDown(piece);
+                moveDown();
             }
         }
 
-        fixPieceToBoard(piece, game);
+        fixPieceToBoard();
 
         clearInterval(endDropInterval);
         endDropInterval = null; // Réinitialisez après l'arrêt

@@ -9,3 +9,5 @@ let refreshInterval = null;
 let endDropInterval = null;
 
 let opacityCurrentPiece = 1;
+
+let history = [];

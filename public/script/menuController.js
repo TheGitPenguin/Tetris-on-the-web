@@ -7,3 +7,12 @@ pauseButton.addEventListener('click', function() {
 restartButton.addEventListener('click', function() {
     initGame();
 });
+resumeButton.addEventListener('click', function() {
+    pauseGame();
+});
+mainMenuButton.addEventListener('click', function() {
+    finishGame(false, false);
+});
+mainMenuButtonBis.addEventListener('click', function() {
+    finishGame(false, false);
+});

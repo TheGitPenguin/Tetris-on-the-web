@@ -13,7 +13,10 @@ function initGame() {
     refreshInterval = setInterval(() => {
         refreshBoard(game.board);
         displayPreview(game);
+        scoreElement.innerText = game.score;
     }, 16);
+
+    history = [];
 }
 
 function initOrChangeDropInterval(speed) {
@@ -36,7 +39,7 @@ function moveDownWithCheck(game) {
         endDropInterval = null;
 
         moveDown(piece);
-    } 
+    }
 
     checkEnDrop(game);
 }

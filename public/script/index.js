@@ -231,7 +231,7 @@ function pauseGame() {
 
 function iniGame() {
     // Initialisation de la vitesse de chute
-    speed = (speedSecondsToBotomPerLevel[level]/20) * 1000;
+    speed = (speedSecondsToBottomPerLevel[level]/20) * 1000;
 
     spawnPiece();
 
@@ -521,10 +521,10 @@ function checkLine() {
 
 function initAndChangeSpeedDrop() {
     if (level > 29) {
-        speed = (speedSecondsToBotomPerLevel[29]/20) * 1000;
+        speed = (speedSecondsToBottomPerLevel[29]/20) * 1000;
     } 
     else {
-        speed = (speedSecondsToBotomPerLevel[level]/20) * 1000;
+        speed = (speedSecondsToBottomPerLevel[level]/20) * 1000;
     }
     clearDownInterval();
     downInterval = setInterval(() => {
